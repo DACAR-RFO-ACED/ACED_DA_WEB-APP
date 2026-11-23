@@ -710,7 +710,7 @@ with table_tab:
 
 
 # ----------------------------------------------------
-# TAB 4: NEW CDP PROFILE (Completely Independent)
+# TAB 4: NEW CDP PROFILE ( Independent)
 # ----------------------------------------------------
 with cdp_tab:
     cdp_filtered = df_cdp.copy()
@@ -774,19 +774,48 @@ with cdp_tab:
         with ch1:
             st.write("**Commodity / Services Breakdown**")
             if 'COMMODITY / SERVICES' in cdp_filtered.columns:
-                pie_counts = cdp_filtered['COMMODITY / SERVICES'].value_counts().reset_index()
-                pie_counts.columns = ['COMMODITY / SERVICES', 'Count']
+                comm_series = cdp_filtered['COMMODITY / SERVICES'].dropna().astype(str).str.strip()
+                valid_comm = comm_series[~comm_series.str.lower().isin(['', 'nan', 'none', 'n/a', '<na>'])]
                 
-                custom_colors = ['#2CA02C', '#FFD700', '#1F77B4', '#FF7F0E', '#9467BD']
-                
-                fig_cdp_pie = px.pie(pie_counts, names='COMMODITY / SERVICES', values='Count', hole=0.6,
-                                     color_discrete_sequence=custom_colors)
-                fig_cdp_pie.update_traces(textinfo='value', textfont=dict(color='black', size=14), 
-                                          marker=dict(line=dict(color='#000000', width=1)))
-                fig_cdp_pie.update_layout(margin=dict(t=10, b=10, l=10, r=10), showlegend=True, height=400,
-                                          legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5, font=dict(color='black')),
-                                          paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color='black'))
-                st.plotly_chart(fig_cdp_pie, width="stretch", key="cdp_pie_chart")
+                if not valid_comm.empty:
+                    pie_counts = valid_comm.value_counts().reset_index()
+                    pie_counts.columns = ['COMMODITY / SERVICES', 'Count']
+                    
+                    custom_colors = ['#2CA02C', '#FFD700', '#1F77B4', '#FF7F0E', '#9467BD']
+                    
+                    fig_cdp_pie = px.pie(
+                        pie_counts,
+                        names='COMMODITY / SERVICES',
+                        values='Count',
+                        hole=0.6,
+                        color_discrete_sequence=custom_colors
+                    )
+                    fig_cdp_pie.update_traces(
+                        textposition='inside',
+                        textinfo='value',
+                        insidetextorientation='horizontal',
+                        textfont=dict(color='black', size=14),
+                        marker=dict(line=dict(color='#000000', width=1))
+                    )
+                    fig_cdp_pie.update_layout(
+                        margin=dict(t=10, b=10, l=10, r=10),
+                        showlegend=True,
+                        height=400,
+                        legend=dict(
+                            orientation="h",
+                            yanchor="top",
+                            y=-0.1,
+                            xanchor="center",
+                            x=0.5,
+                            font=dict(color='black')
+                        ),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color='black')
+                    )
+                    st.plotly_chart(fig_cdp_pie, width="stretch", key="cdp_pie_chart")
+                else:
+                    st.info("No non-blank Commodity / Services data to display.")
                 
         with ch2:
             st.write("**Interventions Count per Year by Province**")
